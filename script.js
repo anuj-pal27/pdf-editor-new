@@ -37,12 +37,8 @@ let isDeleteMode = false;
 let isPanning = false;
 let lastTouchY = 0;
 let lastTouchX = 0;
-
-// Add to your global variables
-let isScrolling = false;
-let scrollInterval = null;
-const SCROLL_STEP = 50; // Pixels to scroll per step
-const SCROLL_INTERVAL = 50; // Milliseconds between scroll steps
+let currentCanvasX = 0;
+let currentCanvasY = 0;
 
 // Initialize fabric canvas after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
@@ -1745,167 +1741,175 @@ document.head.appendChild(mobileStyle);
 function initializeMobileScrollControls() {
     console.log("Initializing mobile scroll controls");
     const pdfContainer = document.getElementById('pdf-container');
+    const canvasContainer = document.querySelector('.canvas-container');
     
-    if (!pdfContainer) {
-        console.error("PDF container not found");
+    if (!pdfContainer || !canvasContainer) {
+        console.error("Container not found");
         return;
     }
 
-    // Create the mobile controls if they don't exist
-    let mobileControls = document.querySelector('.mobile-nav-controls');
-    if (!mobileControls) {
-        mobileControls = document.createElement('div');
-        mobileControls.className = 'mobile-nav-controls';
-        mobileControls.innerHTML = `
-            <button class="nav-control-btn up-btn" aria-label="Scroll Up">
-                <i class="fas fa-chevron-up"></i>
-            </button>
-            <div class="horizontal-controls">
-                <button class="nav-control-btn left-btn" aria-label="Scroll Left">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="nav-control-btn right-btn" aria-label="Scroll Right">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            <button class="nav-control-btn down-btn" aria-label="Scroll Down">
-                <i class="fas fa-chevron-down"></i>
-            </button>
-        `;
-        document.body.appendChild(mobileControls);
-    }
-
-    function scrollContent(direction) {
-        switch(direction) {
-            case 'up':
-                pdfContainer.scrollTop -= SCROLL_STEP;
-                break;
-            case 'down':
-                pdfContainer.scrollTop += SCROLL_STEP;
-                break;
-            case 'left':
-                pdfContainer.scrollLeft -= SCROLL_STEP;
-                break;
-            case 'right':
-                pdfContainer.scrollLeft += SCROLL_STEP;
-                break;
-        }
-    }
-
-    function startScrolling(direction) {
-        console.log('Starting scroll:', direction);
-        if (scrollInterval) clearInterval(scrollInterval);
+    // Initialize touch scrolling
+    function initializeTouchScroll() {
+        let startX, startY;
         
-        // Immediate first scroll
-        scrollContent(direction);
-        
-        // Continue scrolling
-        scrollInterval = setInterval(() => {
-            scrollContent(direction);
-        }, SCROLL_INTERVAL);
-    }
+        canvasContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isPanning = true;
+                startX = e.touches[0].clientX - currentCanvasX;
+                startY = e.touches[0].clientY - currentCanvasY;
+                
+                // Prevent selection
+                e.preventDefault();
+            }
+        }, { passive: false });
 
-    function stopScrolling() {
-        console.log('Stopping scroll');
-        if (scrollInterval) {
-            clearInterval(scrollInterval);
-            scrollInterval = null;
-        }
-    }
-
-    // Add event listeners for all buttons
-    const buttons = {
-        'up': document.querySelector('.up-btn'),
-        'down': document.querySelector('.down-btn'),
-        'left': document.querySelector('.left-btn'),
-        'right': document.querySelector('.right-btn')
-    };
-
-    Object.entries(buttons).forEach(([direction, button]) => {
-        if (button) {
-            console.log(`Adding listeners for ${direction} button`);
+        canvasContainer.addEventListener('touchmove', (e) => {
+            if (!isPanning) return;
             
-            // Mouse events
-            button.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                console.log(`${direction} button clicked`);
-                startScrolling(direction);
-            });
+            const touch = e.touches[0];
+            currentCanvasX = touch.clientX - startX;
+            currentCanvasY = touch.clientY - startY;
 
-            button.addEventListener('mouseup', () => {
-                stopScrolling();
-            });
+            // Apply the transform
+            canvasContainer.style.transform = `translate(${currentCanvasX}px, ${currentCanvasY}px)`;
+            
+            // Prevent default behavior (selection, scrolling)
+            e.preventDefault();
+        }, { passive: false });
 
-            button.addEventListener('mouseleave', () => {
-                stopScrolling();
-            });
+        canvasContainer.addEventListener('touchend', () => {
+            isPanning = false;
+        });
 
-            // Touch events
-            button.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                console.log(`${direction} button touched`);
-                startScrolling(direction);
-            });
+        canvasContainer.addEventListener('touchcancel', () => {
+            isPanning = false;
+        });
+    }
 
-            button.addEventListener('touchend', () => {
-                stopScrolling();
-            });
-        } else {
-            console.error(`${direction} button not found`);
+    // Initialize touch scrolling
+    initializeTouchScroll();
+
+    // Prevent unwanted selection
+    canvasContainer.addEventListener('selectstart', (e) => {
+        if (isPanning) {
+            e.preventDefault();
         }
     });
 
-    // Make sure the container is scrollable
-    pdfContainer.style.overflow = 'auto';
-    pdfContainer.style.position = 'relative';
-    pdfContainer.style.height = 'calc(100vh - 100px)';
+    // Disable default touch actions on canvas
+    fabricCanvas.upperCanvasEl.style.touchAction = 'none';
+    fabricCanvas.lowerCanvasEl.style.touchAction = 'none';
 
-    // Add styles for mobile controls
+    // Update canvas selection behavior
+    fabricCanvas.on('mouse:down', (e) => {
+        if (isPanning) {
+            e.e.preventDefault();
+            fabricCanvas.selection = false;
+        }
+    });
+
+    fabricCanvas.on('mouse:up', () => {
+        fabricCanvas.selection = true;
+    });
+
+    // Add styles for touch handling
     const style = document.createElement('style');
     style.textContent = `
-        .mobile-nav-controls {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            z-index: 9999;
+        .canvas-container {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            will-change: transform;
+            transition: transform 0.05s linear;
         }
 
-        @media (max-width: 768px) {
-            .mobile-nav-controls {
-                display: flex !important;
-            }
-        }
-
-        .nav-control-btn {
-            width: 60px;
-            height: 60px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .nav-control-btn:active {
-            background-color: rgba(0, 0, 0, 0.9);
-            transform: scale(0.95);
-        }
-
-        .horizontal-controls {
-            display: flex;
-            gap: 10px;
+        #pdf-container {
+            overflow: hidden;
+            touch-action: none;
+            position: relative;
+            height: calc(100vh - 100px);
         }
     `;
     document.head.appendChild(style);
+
+    // Add reset position button
+    const resetButton = document.createElement('button');
+    resetButton.className = 'nav-control-btn reset-btn';
+    resetButton.innerHTML = '<i class="fas fa-home"></i>';
+    resetButton.style.position = 'fixed';
+    resetButton.style.bottom = '20px';
+    resetButton.style.left = '20px';
+    resetButton.addEventListener('click', () => {
+        currentCanvasX = 0;
+        currentCanvasY = 0;
+        canvasContainer.style.transform = 'translate(0, 0)';
+    });
+    document.body.appendChild(resetButton);
+
+    // Add boundaries to prevent scrolling too far
+    function checkBoundaries() {
+        const containerRect = pdfContainer.getBoundingClientRect();
+        const canvasRect = canvasContainer.getBoundingClientRect();
+
+        // Add some padding to the boundaries
+        const padding = 100;
+
+        if (currentCanvasX > padding) {
+            currentCanvasX = padding;
+        } else if (currentCanvasX < -(canvasRect.width - containerRect.width + padding)) {
+            currentCanvasX = -(canvasRect.width - containerRect.width + padding);
+        }
+
+        if (currentCanvasY > padding) {
+            currentCanvasY = padding;
+        } else if (currentCanvasY < -(canvasRect.height - containerRect.height + padding)) {
+            currentCanvasY = -(canvasRect.height - containerRect.height + padding);
+        }
+
+        canvasContainer.style.transform = `translate(${currentCanvasX}px, ${currentCanvasY}px)`;
+    }
+
+    // Add scroll momentum
+    let velocityX = 0;
+    let velocityY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let lastTime = 0;
+
+    function updateVelocity(e) {
+        const now = Date.now();
+        const dt = now - lastTime;
+        if (dt > 0) {
+            const touch = e.touches[0];
+            velocityX = (touch.clientX - lastX) / dt;
+            velocityY = (touch.clientY - lastY) / dt;
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+            lastTime = now;
+        }
+    }
+
+    canvasContainer.addEventListener('touchmove', updateVelocity);
+
+    canvasContainer.addEventListener('touchend', () => {
+        if (Math.abs(velocityX) > 0.1 || Math.abs(velocityY) > 0.1) {
+            const decay = 0.95;
+            const animate = () => {
+                if (Math.abs(velocityX) > 0.01 || Math.abs(velocityY) > 0.01) {
+                    currentCanvasX += velocityX * 16;
+                    currentCanvasY += velocityY * 16;
+                    velocityX *= decay;
+                    velocityY *= decay;
+                    
+                    checkBoundaries();
+                    requestAnimationFrame(animate);
+                }
+            };
+            requestAnimationFrame(animate);
+        }
+    });
 }
 
 // Call initialization when DOM is loaded
