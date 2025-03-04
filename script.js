@@ -33,6 +33,11 @@ const MAX_SCALE = 3.0;
 let deleteButton = null;
 let isDeleteMode = false;
 
+// Add these variables at the top with your other global variables
+let isPanning = false;
+let lastTouchY = 0;
+let lastTouchX = 0;
+
 // Initialize fabric canvas after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   console.log("DOM loaded, initializing canvas");
@@ -345,6 +350,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize delete functionality
   initializeDelete();
+
+  // Initialize mobile touch handling
+  initializeMobileScroll();
 });
 
 function initializeDelete() {
@@ -395,22 +403,22 @@ function initializeDelete() {
         }
     });
 
-    fabricCanvas.on('selection:updated', function(e) {
-        const activeObj = e.selected[0];
-        if (activeObj) {
-            showDeleteButton(activeObj);
-        }
-    });
+  fabricCanvas.on('selection:updated', function(e) {
+    const activeObj = e.selected[0];
+    if (activeObj) {
+      showDeleteButton(activeObj);
+    }
+  });
 
-    fabricCanvas.on('selection:cleared', function() {
-        hideDeleteButton();
-    });
+  fabricCanvas.on('selection:cleared', function() {
+    hideDeleteButton();
+  });
 
-    fabricCanvas.on('object:moving', function(e) {
-        if (e.target) {
-            showDeleteButton(e.target);
-        }
-    });
+  fabricCanvas.on('object:moving', function(e) {
+    if (e.target) {
+      showDeleteButton(e.target);
+    }
+  });
 
     // Add keyboard delete handler
     document.addEventListener('keydown', function(e) {
@@ -461,9 +469,9 @@ function showDeleteButton(obj) {
 }
 
 function hideDeleteButton() {
-    if (deleteButton) {
-        deleteButton.style.display = 'none';
-    }
+  if (deleteButton) {
+    deleteButton.style.display = 'none';
+  }
 }
 
 // Add this CSS to your style.css file or add it directly in your script
@@ -1625,3 +1633,91 @@ canvas.addEventListener('touchmove', (e) => {
         touchStartX = dist;
     }
 });
+
+// Add this new function for mobile scroll handling
+function initializeMobileScroll() {
+    const pdfContainer = document.getElementById('pdf-container');
+    
+    // Prevent default touch behavior on the canvas
+    fabricCanvas.getElement().addEventListener('touchmove', function(e) {
+        if (isPanning) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Add touch event listeners
+    fabricCanvas.on('touch:start', function(e) {
+        // If we're in drawing or text mode, don't initiate panning
+        if (isDrawingShape || isTextMode || isAnnotateMode) return;
+
+        isPanning = true;
+        lastTouchY = e.e.touches[0].clientY;
+        lastTouchX = e.e.touches[0].clientX;
+    });
+
+    fabricCanvas.on('touch:move', function(e) {
+        if (!isPanning) return;
+
+        const touch = e.e.touches[0];
+        const deltaY = lastTouchY - touch.clientY;
+        const deltaX = lastTouchX - touch.clientX;
+
+        // Scroll the container
+        pdfContainer.scrollTop += deltaY;
+        pdfContainer.scrollLeft += deltaX;
+
+        lastTouchY = touch.clientY;
+        lastTouchX = touch.clientX;
+
+        // Prevent object selection/movement while scrolling
+        e.e.preventDefault();
+    });
+
+    fabricCanvas.on('touch:end', function() {
+        isPanning = false;
+    });
+
+    // Disable object movement on mobile unless specifically in edit mode
+    fabricCanvas.on('mouse:down', function(e) {
+        if (isMobileDevice() && !isEditMode()) {
+            if (e.target) {
+                e.target.selectable = false;
+                e.target.evented = false;
+            }
+        }
+    });
+}
+
+// Helper function to detect mobile devices
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Helper function to check if we're in edit mode
+function isEditMode() {
+    return isDrawingShape || isTextMode || isAnnotateMode || isDeleteMode;
+}
+
+// Update your CSS for better mobile handling
+const mobileStyle = document.createElement('style');
+mobileStyle.textContent = `
+    @media (max-width: 768px) {
+        #pdf-container {
+            -webkit-overflow-scrolling: touch;
+            overflow-y: scroll;
+            position: relative;
+            touch-action: pan-y;
+        }
+
+        .canvas-container {
+            touch-action: none;
+        }
+
+        /* Increase touch targets for mobile */
+        .tool-btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+    }
+`;
+document.head.appendChild(mobileStyle);

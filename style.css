@@ -433,11 +433,11 @@ body{
 }
 
 #pdf-container {
-    display: none;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f5f5f5;
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 60px); /* Adjust based on your header height */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 #pdf-canvas {
@@ -925,10 +925,8 @@ margin: 3rem 0;
 
 /* Canvas container styles */
 .canvas-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
+    margin: 0 auto;
+    touch-action: none; /* Prevents default touch actions on the canvas */
 }
 
 #pdf-canvas {
@@ -1330,24 +1328,24 @@ margin: 3rem 0;
 /* Mobile-specific styles */
 @media (max-width: 768px) {
     #pdf-container {
-        height: calc(100vh - 60px); /* Adjust for mobile navigation */
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 10px;
-        display: flex;
-        justify-content: space-around;
-        z-index: 1000;
+    .canvas-container {
+        touch-action: none;
     }
 
-    .controls button {
-        padding: 8px 16px;
-        font-size: 16px;
+    /* Make toolbar buttons more touch-friendly */
+    .tool-btn {
+        padding: 12px;
+        margin: 4px;
+    }
+
+    /* Ensure sufficient spacing between tools on mobile */
+    .tool-group {
+        gap: 8px;
+        padding: 8px;
     }
 }
 
