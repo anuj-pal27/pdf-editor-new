@@ -925,16 +925,19 @@ margin: 3rem 0;
 
 /* Canvas container styles */
 .canvas-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
+    -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
+    max-width: 100%;
+    max-height: 80vh;
+    margin: 0 auto;
+    position: relative;
 }
 
 #pdf-canvas {
-    display: block;
-    background-color: white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    touch-action: pan-y pinch-zoom;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /* Fabric.js canvas container */
