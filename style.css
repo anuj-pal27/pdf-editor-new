@@ -930,19 +930,52 @@ margin: 3rem 0;
     max-height: 80vh;
     margin: 0 auto;
     position: relative;
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Prevent horizontal scrolling if not needed */
+    touch-action: auto; /* Enable all touch actions */
 }
 
 #pdf-canvas {
-    touch-action: pan-y pinch-zoom;
+    touch-action: auto !important; /* Override any other touch-action settings */
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    max-width: 100%;
+    height: auto;
 }
 
-/* Fabric.js canvas container */
-.canvas-container {
-    margin: 0 auto;
+#pdf-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 200px); /* Adjust height to account for toolbars */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+    background: #f5f5f5;
+}
+
+.textLayer {
+    opacity: 0.2;
+    mix-blend-mode: multiply;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .canvas-container {
+        max-height: calc(100vh - 180px); /* Adjust for mobile screens */
+        -webkit-overflow-scrolling: touch;
+        overflow-y: scroll; /* Force scrolling on mobile */
+    }
+
+    #pdf-canvas {
+        pointer-events: auto !important; /* Ensure touch events work */
+    }
+
+    /* Prevent unwanted selection on touch */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
 }
 
 .action-buttons {
