@@ -925,57 +925,21 @@ margin: 3rem 0;
 
 /* Canvas container styles */
 .canvas-container {
-    -webkit-overflow-scrolling: touch; /* For smooth scrolling on iOS */
-    max-width: 100%;
-    max-height: 80vh;
-    margin: 0 auto;
-    position: relative;
-    overflow-y: auto; /* Enable vertical scrolling */
-    overflow-x: hidden; /* Prevent horizontal scrolling if not needed */
-    touch-action: auto; /* Enable all touch actions */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 #pdf-canvas {
-    touch-action: auto !important; /* Override any other touch-action settings */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    max-width: 100%;
-    height: auto;
+    display: block;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-#pdf-container {
-    position: relative;
-    width: 100%;
-    height: calc(100vh - 200px); /* Adjust height to account for toolbars */
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y pinch-zoom;
-    background: #f5f5f5;
-}
-
-.textLayer {
-    opacity: 0.2;
-    mix-blend-mode: multiply;
-}
-
-/* Mobile-specific styles */
-@media (max-width: 768px) {
-    .canvas-container {
-        max-height: calc(100vh - 180px); /* Adjust for mobile screens */
-        -webkit-overflow-scrolling: touch;
-        overflow-y: scroll; /* Force scrolling on mobile */
-    }
-
-    #pdf-canvas {
-        pointer-events: auto !important; /* Ensure touch events work */
-    }
-
-    /* Prevent unwanted selection on touch */
-    * {
-        -webkit-tap-highlight-color: transparent;
-    }
+/* Fabric.js canvas container */
+.canvas-container {
+    margin: 0 auto;
 }
 
 .action-buttons {
@@ -1390,5 +1354,57 @@ margin: 3rem 0;
 /* Add these styles for touch feedback */
 .controls button:active {
     background-color: #ddd;
+}
+
+/* Add these styles for the delete functionality */
+.delete-active {
+    background-color: #ff4444 !important;
+    color: white !important;
+}
+
+.delete-active i {
+    color: white !important;
+}
+
+.delete-hover {
+    border: 2px dashed #ff4444;
+}
+
+/* Style for the delete button in toolbar */
+#delete-btn:hover {
+    background-color: #ff4444;
+    color: white;
+}
+
+#delete-btn:hover i {
+    color: white;
+}
+
+/* Style for the floating delete button that appears near selected objects */
+.floating-delete-btn {
+    position: absolute;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.floating-delete-btn:hover {
+    background-color: #ff0000;
+    transform: scale(1.05);
+}
+
+.floating-delete-btn i {
+    font-size: 16px;
 }
 

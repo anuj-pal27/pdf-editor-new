@@ -29,6 +29,10 @@ let currentScale = 1.0;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 3.0;
 
+// Add this to your global variables at the top
+let deleteButton = null;
+let isDeleteMode = false;
+
 // Initialize fabric canvas after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   console.log("DOM loaded, initializing canvas");
@@ -338,6 +342,168 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Add click handler for PDF text selection
   fabricCanvas.on('mouse:down', handlePDFTextSelection);
+
+  // Initialize delete functionality
+  initializeDelete();
+});
+
+function initializeDelete() {
+    // Create floating delete button
+    deleteButton = createDeleteButton();
+
+    // Add toolbar delete button functionality
+    const deleteBtn = document.getElementById('delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            isDeleteMode = !isDeleteMode;
+            this.classList.toggle('delete-active');
+            
+            if (isDeleteMode) {
+                fabricCanvas.defaultCursor = 'not-allowed';
+                // Add hover effect to objects
+                fabricCanvas.forEachObject(function(obj) {
+                    obj._originalOpacity = obj.opacity;
+                    obj.set('opacity', 0.7);
+                });
+            } else {
+                fabricCanvas.defaultCursor = 'default';
+                // Remove hover effect
+                fabricCanvas.forEachObject(function(obj) {
+                    if (obj._originalOpacity !== undefined) {
+                        obj.set('opacity', obj._originalOpacity);
+                    }
+                });
+            }
+            fabricCanvas.renderAll();
+        });
+    }
+
+    // Add canvas click handler for delete mode
+    fabricCanvas.on('mouse:down', function(e) {
+        if (isDeleteMode && e.target) {
+            fabricCanvas.remove(e.target);
+            fabricCanvas.renderAll();
+            saveCanvasState();
+        }
+    });
+
+    // Add selection handlers
+    fabricCanvas.on('selection:created', function(e) {
+        const activeObj = e.selected[0];
+        if (activeObj) {
+            showDeleteButton(activeObj);
+        }
+    });
+
+    fabricCanvas.on('selection:updated', function(e) {
+        const activeObj = e.selected[0];
+        if (activeObj) {
+            showDeleteButton(activeObj);
+        }
+    });
+
+    fabricCanvas.on('selection:cleared', function() {
+        hideDeleteButton();
+    });
+
+    fabricCanvas.on('object:moving', function(e) {
+        if (e.target) {
+            showDeleteButton(e.target);
+        }
+    });
+
+    // Add keyboard delete handler
+    document.addEventListener('keydown', function(e) {
+        if ((e.key === 'Delete' || e.key === 'Backspace') && 
+            document.activeElement.tagName !== 'INPUT' && 
+            document.activeElement.tagName !== 'TEXTAREA') {
+            const activeObject = fabricCanvas.getActiveObject();
+            if (activeObject && !activeObject.isEditing) {
+                fabricCanvas.remove(activeObject);
+                hideDeleteButton();
+                fabricCanvas.renderAll();
+                saveCanvasState();
+            }
+        }
+    });
+}
+
+function createDeleteButton() {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+    deleteBtn.className = 'floating-delete-btn';
+    deleteBtn.style.display = 'none';
+    document.body.appendChild(deleteBtn);
+
+    deleteBtn.addEventListener('click', function() {
+        const activeObject = fabricCanvas.getActiveObject();
+        if (activeObject) {
+            fabricCanvas.remove(activeObject);
+            hideDeleteButton();
+            fabricCanvas.renderAll();
+            saveCanvasState();
+        }
+    });
+
+    return deleteBtn;
+}
+
+function showDeleteButton(obj) {
+    if (!deleteButton) return;
+    
+    const zoom = fabricCanvas.getZoom();
+    const objRect = obj.getBoundingRect();
+    const canvasRect = fabricCanvas.getElement().getBoundingClientRect();
+    
+    deleteButton.style.left = (canvasRect.left + (objRect.left + objRect.width/2) * zoom - 20) + 'px';
+    deleteButton.style.top = (canvasRect.top + objRect.top * zoom - 50) + 'px';
+    deleteButton.style.display = 'flex';
+}
+
+function hideDeleteButton() {
+    if (deleteButton) {
+        deleteButton.style.display = 'none';
+    }
+}
+
+// Add this CSS to your style.css file or add it directly in your script
+const deleteButtonStyle = document.createElement('style');
+deleteButtonStyle.textContent = `
+    .floating-delete-btn {
+        background-color: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px;
+        cursor: pointer;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 14px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    .floating-delete-btn:hover {
+        background-color: #ff0000;
+        transform: scale(1.05);
+    }
+`;
+document.head.appendChild(deleteButtonStyle);
+
+// Modify your existing keyboard event listener for delete
+document.addEventListener('keydown', function(e) {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && 
+      document.activeElement.tagName !== 'INPUT' && 
+      document.activeElement.tagName !== 'TEXTAREA') {
+      const activeObject = fabricCanvas.getActiveObject();
+      if (activeObject && !activeObject.isEditing) {
+          fabricCanvas.remove(activeObject);
+          hideDeleteButton();
+          fabricCanvas.renderAll();
+          saveCanvasState();
+      }
+  }
 });
 
 // Function to show image modal
@@ -378,44 +544,6 @@ function setupImageModalListeners() {
             imageModal.style.display = 'none';
         }
     });
-}
-
-// Function to handle image upload
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            fabric.Image.fromURL(e.target.result, function(img) {
-                // Scale image if too large
-                const maxSize = 300;
-                if (img.width > maxSize || img.height > maxSize) {
-                    const scale = maxSize / Math.max(img.width, img.height);
-                    img.scale(scale);
-                }
-
-                // Center image
-                img.set({
-                    left: fabricCanvas.width / 2 - (img.width * img.scaleX) / 2,
-                    top: fabricCanvas.height / 2 - (img.height * img.scaleY) / 2
-                });
-
-                fabricCanvas.add(img);
-                fabricCanvas.setActiveObject(img);
-                
-                fabricCanvas.renderAll();
-                
-                // Save state for undo
-                saveCanvasState();
-                
-                // Close modal
-                document.getElementById('image-modal').style.display = 'none';
-            });
-        };
-        
-        reader.readAsDataURL(file);
-    }
 }
 
 async function loadPDF(data) {
@@ -977,17 +1105,6 @@ function deleteSelectedObject() {
         hideTextToolbar(); // Hide toolbar after deletion
     }
 }
-
-// Update your keyboard event listener to also handle delete key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-        // Only delete if we're not editing text
-        const activeObject = fabricCanvas.getActiveObject();
-        if (activeObject && !(activeObject.isEditing)) {
-            deleteSelectedObject();
-        }
-    }
-});
 
 function showSignatureModal() {
     document.getElementById('signature-modal').style.display = 'block';
