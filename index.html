@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Editor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <img src="https://www.writecream.com/wp-content/uploads/2021/05/va-logo.svg" alt="PDF Editor">
+            </div>
+            <ul class="nav-links">
+                <li><a href="home.html">Home</a></li>
+                <li><a href="compress.html">About us</a></li>
+                <li><a href="edit.html">Features</a></li>
+                <li><a href="fill-sign.html">Pricing</a></li>
+                <li><a href="merge.html">Contact</a></li>
+                <li><a href="delete.html">All Tools</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="login.html" class="login-btn">Login</a>
+            </div>
+        </div>
+    </nav>
+    <div class="page-wrapper">
+        <div class="background-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to PDF Editor</h1>
+            <p class="hero-description">The best PDF Editor for your documents, Online and Free Tool</p>
+        </div>
+    </div>
+        <div class="upload-section" id="upload-section">
+            <div class="upload-icon">
+                <i class="fas fa-file-image"></i>
+            </div>
+            <div class="upload-controls">
+                <input type="file" id="pdf-upload" accept="application/pdf" style="display: none;">
+                <button id="upload-btn">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    Choose PDF Files
+                </button>
+                <p class="upload-description">Drop your PDF file here</p>
+            </div>
+        
+        </div>
+        <section class="why-choose-section" id="why-choose-section">
+            <h1>Why Choose Our PDF Editor?</h1>
+            <p class="subtitle">Managing PDFs has never been easier! Our web-based PDF Editor offers a seamless experience for editing, modifying, and enhancing PDF documents right from your browser—no downloads required.</p>
+            
+            <div class="features-grid" id="features-section">
+                <div class="feature-item">
+                    <div class="feature-card">
+                        <i class="fas fa-bolt"></i>
+                        <h3> Quick & Easy to Use</h3>
+                        <p>Upload your PDF and start editing instantly. No complex installations or software setup—just a smooth, user-friendly interface.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>100% Online & Secure</h3>
+                        <p>Your documents stay safe with our in-browser processing. No files are stored or shared, ensuring complete privacy.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-card">
+                        <i class="fas fa-pencil-alt"></i>
+                        <h3>Feature-Rich Editing</h3>
+                        <p>Add text, annotations, highlights, and more—customize your PDFs the way you need with intuitive tools.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-card">
+                        <i class="fas fa-gift"></i>
+                        <h3>Works on Any Device
+                        </h3>
+                        <p>Whether you're using a desktop, tablet, or mobile device, our PDF editor is fully responsive and accessible anytime, anywhere.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-card">
+                        <i class="fas fa-user-check"></i>
+                        <h3>Free & Efficient</h3>
+                        <p>Save time and money with our free-to-use tool. Get professional PDF editing without expensive software.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-card">
+                        <i class="fas fa-desktop"></i>
+                        <h3>No Registration Required</h3>
+                        <p>Start editing your PDFs instantly—no sign-ups, logins, or subscriptions needed. Just upload, edit, and download with ease!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+       
+        <div id="pdf-container" style="display: none;">
+            <!-- Tool Group -->
+            <div class="tool-group">
+                <div class="tool-item">
+                    <button class="tool-btn" id="add-text-btn" title="Text">
+                        <i class="fas fa-font"></i>
+                        <span>Text</span>
+                    </button>
+                </div>
+                <div class="tool-item">
+                    <button class="tool-btn" title="Link">
+                        <i class="fas fa-link"></i>
+                        <span>Link</span>
+                    </button>
+                </div>
+                <div class="tool-item">
+                    <button class="tool-btn" title="Sign">
+                        <i class="fas fa-signature"></i>
+                        <span>Sign</span>
+                    </button>
+                </div>
+                <div class="tool-item">
+                    <button class="tool-btn" title="Image">
+                        <i class="fas fa-image"></i>
+                        <span>Image</span>
+                    </button>
+                </div>
+                <div class="tool-item">
+                    <button class="tool-btn" title="Annotate">
+                        <i class="fas fa-comment-alt"></i>
+                        <span>Annotate</span>
+                    </button>
+                </div>
+                <div class="tool-item">
+                    <button class="tool-btn" title="Shapes" id="shapes-btn">
+                        <i class="fas fa-shapes"></i>
+                        <span>Shapes</span>
+                    </button>
+                    <div class="shapes-dropdown" id="shapes-dropdown">
+                        <button class="shape-btn" data-shape="rectangle">
+                            <i class="far fa-square"></i>
+                            Rectangle
+                        </button>
+                        <button class="shape-btn" data-shape="circle">
+                            <i class="far fa-circle"></i>
+                            Circle
+                        </button>
+                        <button class="shape-btn" data-shape="line">
+                            <i class="fas fa-minus"></i>
+                            Line
+                        </button>
+                        <button class="shape-btn" data-shape="triangle">
+                            <i class="fas fa-play"></i>
+                            Triangle
+                        </button>
+                        <button class="shape-btn" data-shape="ellipse">
+                            <i class="fas fa-egg"></i>
+                            Ellipse
+                        </button>
+                    </div>
+                </div>
+                <div class="tool-item">
+                    <button class="tool-btn" title="Undo">
+                        <i class="fas fa-undo"></i>
+                        <span>Undo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Text Formatting Toolbar -->
+            <div class="text-toolbar" id="text-toolbar" style="display: none;">
+                <button class="tool-btn" id="bold-btn" title="Bold">
+                    <i class="fas fa-bold"></i>
+                </button>
+                <button class="tool-btn" id="italic-btn" title="Italic">
+                    <i class="fas fa-italic"></i>
+                </button>
+                <button class="tool-btn" id="underline-btn" title="Underline">
+                    <i class="fas fa-underline"></i>
+                </button>
+                <select id="font-size" title="Font Size">
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="20">20</option>
+                    <option value="24">24</option>
+                    <option value="28">28</option>
+                    <option value="32">32</option>
+                </select>
+                <input type="color" id="text-color" title="Text Color">
+                <button class="tool-btn" id="delete-btn" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        
+            <!-- Canvas -->
+            <canvas id="pdf-canvas"></canvas>
+
+            <!-- Add this after the canvas and before the zoom controls -->
+            <div class="page-navigation">
+                <button class="nav-btn" id="prev-page" title="Previous Page">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="page-info">
+                    <span>Page</span>
+                    <input type="number" id="current-page" min="1" value="1">
+                    <span>of</span>
+                    <span id="total-pages">1</span>
+                </div>
+                <button class="nav-btn" id="next-page" title="Next Page">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Add this after the canvas -->
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in-btn" title="Zoom Out">
+                    <i class="fas fa-search-plus"></i>
+
+                </button>
+                <span id="zoom-level"></span>
+                <button class="zoom-btn" id="zoom-out-btn" title="Zoom In">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+            </div>
+
+            <!-- Add this after the canvas -->
+            <div class="action-buttons">
+                <button class="action-btn primary" id="save-btn">
+                    <i class="fas fa-save"></i>
+                    Apply Changes
+                </button>
+                
+                <div class="modal" id="save-modal">
+                    <div class="modal-content">
+                        <h3>Save or Share Your PDF</h3>
+                        <div class="modal-buttons">
+                            <button class="modal-btn" id="download-btn">
+                                <i class="fas fa-download"></i>
+                                Download PDF
+                            </button>
+                            <button class="modal-btn" id="share-btn">
+                                <i class="fas fa-share-alt"></i>
+                                Share
+                            </button>
+                            <button class="modal-btn" id="print-btn">
+                                <i class="fas fa-print"></i>
+                                Print
+                            </button>
+                            <button class="modal-btn" id="email-btn">
+                                <i class="fas fa-envelope"></i>
+                                Send via Email
+                            </button>
+                        </div>
+                        <button class="close-btn" id="close-modal">×</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+<footer class="footer">
+    <div class="footer-content">
+        <!-- Company Info -->
+        <div class="footer-section">
+            <div class="footer-logo">
+                <img src="https://www.writecream.com/wp-content/uploads/2021/05/va-logo.svg" alt="WriteCream AI Logo">
+            </div>
+            <p class="company-description">
+                WriteCream AI provides intelligent document solutions to make your work easier and more efficient.
+            </p>
+            <div class="social-links">
+                <a href="#" title="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="footer-section">
+            <h4>Quick Links</h4>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Features</a></li>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </div>
+
+        <!-- Tools -->
+        <div class="footer-section">
+            <h4>Our Tools</h4>
+            <ul>
+                <li><a href="#">PDF Merger</a></li>
+                <li><a href="#">PDF Editor</a></li>
+                <li><a href="#">PDF Signer</a></li>
+                <li><a href="#">PDF Compressor</a></li>
+                <li><a href="#">All Tools</a></li>
+            </ul>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="footer-section">
+            <h4>Contact Us</h4>
+            <ul class="contact-info">
+                <li><i class="fas fa-envelope"></i> support@writecream.com</li>
+                <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                <li><i class="fas fa-map-marker-alt"></i> 123 Business Street, Suite 100<br>New York, NY 10001</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="footer-bottom">
+        <div class="footer-bottom-content">
+            <p>&copy; 2024 WriteCream AI. All rights reserved.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Cookie Policy</a>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- Add this after your existing modals -->
+<div class="modal" id="link-modal">
+    <div class="modal-content">
+        <h3>Add Link</h3>
+        <div class="link-form">
+            <input type="text" id="link-text" placeholder="Link Text" class="link-input">
+            <input type="url" id="link-url" placeholder="https://example.com" class="link-input">
+            <div class="link-buttons">
+                <button class="modal-btn primary" id="add-link-btn">Add Link</button>
+                <button class="modal-btn" id="cancel-link-btn">Cancel</button>
+            </div>
+        </div>
+        <button class="close-btn" id="close-link-modal">×</button>
+    </div>
+</div>
+<!-- Add this modal for signatures -->
+<div class="modal" id="signature-modal">
+    <div class="modal-content">
+        <h3>Add Signature</h3>
+        <div class="signature-options">
+            <button class="modal-btn" id="draw-sig-btn">
+                <i class="fas fa-pen"></i>
+                Draw Signature
+            </button>
+            <input type="file" id="sig-upload" accept="image/*" style="display: none;">
+            <button class="modal-btn" id="upload-sig-btn">
+                <i class="fas fa-upload"></i>
+                Upload Signature
+            </button>
+        </div>
+        <button class="close-btn" id="close-sig-modal">×</button>
+    </div>
+</div>
+<!-- Add this modal for image upload -->
+<div class="modal" id="image-modal">
+    <div class="modal-content">
+        <h3>Upload Image</h3>
+        <div class="image-upload-container">
+            <input type="file" id="image-upload" accept="image/*" style="display: none;">
+            <button id="upload-img-btn" class="upload-btn">
+                <i class="fas fa-cloud-upload-alt"></i>
+                Choose Image
+            </button>
+            <p class="upload-text">or drag and drop image here</p>
+        </div>
+        <button class="close" id="close-image-modal">&times;</button>
+    </div>
+</div>
+
+</body>
+</html>
