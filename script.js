@@ -38,6 +38,12 @@ let isPanning = false;
 let lastTouchY = 0;
 let lastTouchX = 0;
 
+// Add to your global variables
+let isScrolling = false;
+let scrollInterval = null;
+const SCROLL_STEP = 50; // Pixels to scroll per step
+const SCROLL_INTERVAL = 50; // Milliseconds between scroll steps
+
 // Initialize fabric canvas after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   console.log("DOM loaded, initializing canvas");
@@ -353,6 +359,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize mobile touch handling
   initializeMobileScroll();
+
+  initializeMobileScrollControls();
+
+  // Make sure the controls are visible on mobile
+  if (isMobileDevice()) {
+    const controls = document.querySelector('.mobile-nav-controls');
+    if (controls) {
+      controls.style.display = 'flex';
+    }
+  }
 });
 
 function initializeDelete() {
@@ -1690,7 +1706,11 @@ function initializeMobileScroll() {
 
 // Helper function to detect mobile devices
 function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return (
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ||
+        window.matchMedia('(hover: none)').matches
+    );
 }
 
 // Helper function to check if we're in edit mode
@@ -1721,3 +1741,183 @@ mobileStyle.textContent = `
     }
 `;
 document.head.appendChild(mobileStyle);
+
+function initializeMobileScrollControls() {
+    console.log("Initializing mobile scroll controls");
+    const pdfContainer = document.getElementById('pdf-container');
+    
+    if (!pdfContainer) {
+        console.error("PDF container not found");
+        return;
+    }
+
+    // Create the mobile controls if they don't exist
+    let mobileControls = document.querySelector('.mobile-nav-controls');
+    if (!mobileControls) {
+        mobileControls = document.createElement('div');
+        mobileControls.className = 'mobile-nav-controls';
+        mobileControls.innerHTML = `
+            <button class="nav-control-btn up-btn" aria-label="Scroll Up">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+            <div class="horizontal-controls">
+                <button class="nav-control-btn left-btn" aria-label="Scroll Left">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="nav-control-btn right-btn" aria-label="Scroll Right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <button class="nav-control-btn down-btn" aria-label="Scroll Down">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        `;
+        document.body.appendChild(mobileControls);
+    }
+
+    function scrollContent(direction) {
+        switch(direction) {
+            case 'up':
+                pdfContainer.scrollTop -= SCROLL_STEP;
+                break;
+            case 'down':
+                pdfContainer.scrollTop += SCROLL_STEP;
+                break;
+            case 'left':
+                pdfContainer.scrollLeft -= SCROLL_STEP;
+                break;
+            case 'right':
+                pdfContainer.scrollLeft += SCROLL_STEP;
+                break;
+        }
+    }
+
+    function startScrolling(direction) {
+        console.log('Starting scroll:', direction);
+        if (scrollInterval) clearInterval(scrollInterval);
+        
+        // Immediate first scroll
+        scrollContent(direction);
+        
+        // Continue scrolling
+        scrollInterval = setInterval(() => {
+            scrollContent(direction);
+        }, SCROLL_INTERVAL);
+    }
+
+    function stopScrolling() {
+        console.log('Stopping scroll');
+        if (scrollInterval) {
+            clearInterval(scrollInterval);
+            scrollInterval = null;
+        }
+    }
+
+    // Add event listeners for all buttons
+    const buttons = {
+        'up': document.querySelector('.up-btn'),
+        'down': document.querySelector('.down-btn'),
+        'left': document.querySelector('.left-btn'),
+        'right': document.querySelector('.right-btn')
+    };
+
+    Object.entries(buttons).forEach(([direction, button]) => {
+        if (button) {
+            console.log(`Adding listeners for ${direction} button`);
+            
+            // Mouse events
+            button.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                console.log(`${direction} button clicked`);
+                startScrolling(direction);
+            });
+
+            button.addEventListener('mouseup', () => {
+                stopScrolling();
+            });
+
+            button.addEventListener('mouseleave', () => {
+                stopScrolling();
+            });
+
+            // Touch events
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                console.log(`${direction} button touched`);
+                startScrolling(direction);
+            });
+
+            button.addEventListener('touchend', () => {
+                stopScrolling();
+            });
+        } else {
+            console.error(`${direction} button not found`);
+        }
+    });
+
+    // Make sure the container is scrollable
+    pdfContainer.style.overflow = 'auto';
+    pdfContainer.style.position = 'relative';
+    pdfContainer.style.height = 'calc(100vh - 100px)';
+
+    // Add styles for mobile controls
+    const style = document.createElement('style');
+    style.textContent = `
+        .mobile-nav-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-nav-controls {
+                display: flex !important;
+            }
+        }
+
+        .nav-control-btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-control-btn:active {
+            background-color: rgba(0, 0, 0, 0.9);
+            transform: scale(0.95);
+        }
+
+        .horizontal-controls {
+            display: flex;
+            gap: 10px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Call initialization when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, initializing mobile controls");
+    initializeMobileScrollControls();
+});
+
+// Show/hide controls based on screen size
+window.addEventListener('resize', function() {
+    const controls = document.querySelector('.mobile-nav-controls');
+    if (controls) {
+        controls.style.display = isMobileDevice() ? 'flex' : 'none';
+    }
+});
